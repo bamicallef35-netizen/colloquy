@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>A Colloquy of Signals</title>
+<meta name="description" content="An aesthetically potent environment after Gordon Pask: signalling agents with drives that seek a transient satisfaction and tire of repetition. Say something — then vary it.">
+<style>
+  :root {
+    --bg: #07070b; --panel: #121219; --panel2: #0d0d13; --ink: #ecebf2;
+    --muted: #8b8aa0; --line: #24242f; --accent: #c6a3ff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body { background: var(--bg); color: var(--ink);
+    font: 15px/1.5 ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased; }
+  header { padding: 15px 16px 10px; border-bottom: 1px solid var(--line); }
+  header h1 { margin: 0; font-size: 17px; font-weight: 650; }
+  header h1 em { color: var(--accent); font-style: italic; }
+  header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; max-width: 72ch; }
+  header a { color: var(--accent); text-decoration: none; } header a:hover { text-decoration: underline; }
+  #stage { position: relative; height: 56vh; min-height: 320px; touch-action: none;
+    background: radial-gradient(90% 90% at 50% 45%, #0c0c15 0%, var(--bg) 72%); }
+  #c { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #prompt { position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    color: var(--muted); font-size: 13px; background: rgba(13,13,19,.7); border: 1px solid var(--line);
+    padding: 5px 12px; border-radius: 20px; pointer-events: none; white-space: nowrap; }
+  #controls { border-top: 1px solid var(--line); background: var(--panel); padding: 11px 12px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+  .group { display: flex; align-items: center; gap: 7px; }
+  .lbl { color: var(--muted); font-size: 12px; }
+  .palette { display: flex; gap: 6px; }
+  .swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #0000; cursor: pointer;
+    transition: transform .08s, border-color .08s; }
+  .swatch:hover { transform: scale(1.1); } .swatch:active { transform: scale(.94); }
+  .swatch.hot { border-color: #fff; }
+  button { font: inherit; font-size: 13px; color: var(--ink); background: var(--panel2);
+    border: 1px solid var(--line); border-radius: 8px; padding: 6px 11px; cursor: pointer; }
+  button:hover { border-color: #363646; }
+  .meter { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
+  .bar { width: 90px; height: 6px; border-radius: 4px; background: #1c1c26; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: linear-gradient(90deg, #6ad1a6, #e2b85a, #e2645a); width: 0; }
+  footer { padding: 9px 16px 16px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); }
+  footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>A Colloquy of Signals — <em>after Gordon Pask</em></h1>
+  <p>
+    A small society of agents with inner drives. They answer one another's signals and reach a brief
+    <em>satisfaction</em>, then tire of anything repeated — so to stay in conversation you have to keep
+    varying what you say. An homage to Pask's <em>Colloquy of Mobiles</em> (1968) and the "boredom" of his
+    <em>Musicolour</em> (c.1953), not a reconstruction of them. <a href="https://github.com/benmicallef/colloquy">Source &amp; sources</a>.
+  </p>
+</header>
+
+<main>
+  <div id="stage">
+    <canvas id="c"></canvas>
+    <div id="prompt">Say something — tap a colour. Then vary it.</div>
+  </div>
+  <div id="controls">
+    <div class="group">
+      <span class="lbl">Your signal</span>
+      <div class="palette" id="palette"></div>
+    </div>
+    <div class="group meter">
+      <span>conversation</span><div class="bar"><i id="convo"></i></div>
+    </div>
+    <div class="group meter">
+      <span>their boredom</span><div class="bar"><i id="bored"></i></div>
+    </div>
+    <div class="group">
+      <button id="auto">Auto-chatter: off</button>
+      <button id="reset">Reset</button>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Pask called these "aesthetically potent environments". The agents' update rules are my own design;
+  his were analog. Repository: <a href="https://github.com/benmicallef/colloquy">benmicallef/colloquy</a>.
+</footer>
+
+<script type="module">
+import { createState, step, injectViewer, PROJECTOR } from "./colloquy.js";
+
+const cv = document.getElementById("c");
+const ctx = cv.getContext("2d");
+const stage = document.getElementById("stage");
+let dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+let state, pulses = [], HUES = 6, auto = false, autoClock = 0, lastHot = -1;
+
+function hueColor(h, l = 62, a = 1) { return `hsla(${Math.round((h / HUES) * 360)}, 72%, ${l}%, ${a})`; }
+
+function build() {
+  state = createState({ seed: 1 });
+  HUES = state.p.hues;
+  pulses = [];
+  layoutPalette();
+}
+
+function layout() {
+  const r = stage.getBoundingClientRect();
+  const cx = r.width / 2, cy = r.height / 2;
+  const R = Math.min(r.width, r.height) * 0.34;
+  const n = state.agents.length;
+  state.agents.forEach((a, i) => {
+    const ang = (i / n) * Math.PI * 2 - Math.PI / 2;
+    a._x = cx + R * Math.cos(ang);
+    a._y = cy + R * Math.sin(ang);
+  });
+  state._cx = cx; state._cy = cy;
+}
+
+function fit() {
+  const r = stage.getBoundingClientRect();
+  cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  layout();
+}
+
+function spawnFromEvents() {
+  for (const e of state.events) {
+    if (e.kind === "emit") {
+      const src = e.from < 0 ? { _x: state._cx, _y: state._cy } : state.agents[e.from];
+      pulses.push({ kind: "ring", x: src._x, y: src._y, hue: e.hue, age: 0, max: 46, viewer: e.from < 0 });
+    } else if (e.kind === "answer") {
+      const src = e.from < 0 ? { _x: state._cx, _y: state._cy } : state.agents[e.from];
+      const dst = state.agents[e.to];
+      pulses.push({ kind: "link", x0: src._x, y0: src._y, x1: dst._x, y1: dst._y, hue: e.hue, age: 0, max: 30 });
+    } else if (e.kind === "beam") {
+      const a = state.agents[e.from];
+      pulses.push({ kind: "beam", x: a._x, y: a._y, hue: e.hue, age: 0, max: 24 });
+    }
+  }
+}
+
+function draw() {
+  const r = stage.getBoundingClientRect();
+  ctx.clearRect(0, 0, r.width, r.height);
+  ctx.fillStyle = "rgba(7,7,11,0.34)"; // soft trails
+  ctx.fillRect(0, 0, r.width, r.height);
+
+  // pulses under the agents
+  for (const pu of pulses) {
+    const k = pu.age / pu.max, fade = 1 - k;
+    if (pu.kind === "ring") {
+      ctx.beginPath(); ctx.arc(pu.x, pu.y, 6 + k * 60, 0, 7);
+      ctx.strokeStyle = hueColor(pu.hue, pu.viewer ? 75 : 62, fade * 0.8);
+      ctx.lineWidth = pu.viewer ? 3 : 2; ctx.stroke();
+    } else if (pu.kind === "link") {
+      const x = pu.x0 + (pu.x1 - pu.x0) * k, y = pu.y0 + (pu.y1 - pu.y0) * k;
+      ctx.beginPath(); ctx.arc(x, y, 4, 0, 7); ctx.fillStyle = hueColor(pu.hue, 70, fade); ctx.fill();
+    } else if (pu.kind === "beam") {
+      ctx.beginPath(); ctx.arc(pu.x, pu.y, 10 + k * 26, 0, 7);
+      ctx.fillStyle = hueColor(pu.hue, 85, fade * 0.5); ctx.fill();
+    }
+    pu.age++;
+  }
+  pulses = pulses.filter((p) => p.age < p.max);
+
+  // agents
+  for (const a of state.agents) {
+    const glow = 0.4 + a.drive * 0.6;
+    const rad = 13 + a.drive * 7;
+    ctx.beginPath(); ctx.arc(a._x, a._y, rad * 1.7, 0, 7);
+    ctx.fillStyle = hueColor(a.hue, 60, 0.10 * glow); ctx.fill();
+    ctx.beginPath(); ctx.arc(a._x, a._y, rad, 0, 7);
+    ctx.fillStyle = hueColor(a.hue, 30 + a.drive * 30, 0.95); ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = a.role === PROJECTOR ? hueColor(a.hue, 78, 0.9) : "rgba(236,235,242,0.35)";
+    ctx.stroke();
+    // boredom ring (max habituation)
+    let mh = 0; for (const h of a.habit) mh = Math.max(mh, h);
+    if (mh > 0.05) {
+      ctx.beginPath(); ctx.arc(a._x, a._y, rad + 4, -Math.PI / 2, -Math.PI / 2 + mh * Math.PI * 2);
+      ctx.strokeStyle = "rgba(226,100,90,0.8)"; ctx.lineWidth = 2.5; ctx.stroke();
+    }
+  }
+}
+
+let answerWin = [];
+function meters() {
+  const answers = state.events.filter((e) => e.kind === "answer").length;
+  answerWin.push(answers); if (answerWin.length > 90) answerWin.shift();
+  const rate = Math.min(1, answerWin.reduce((u, v) => u + v, 0) / 20);
+  document.getElementById("convo").style.width = (rate * 100).toFixed(0) + "%";
+  let mh = 0, c = 0;
+  for (const a of state.agents) { for (const h of a.habit) { mh += h; c++; } }
+  document.getElementById("bored").style.width = ((mh / c) * 100 * 2.2).toFixed(0) + "%";
+}
+
+function frame() {
+  if (auto) { autoClock++; if (autoClock % 40 === 0) injectViewer(state, Math.floor((autoClock / 40) * 2.3) % HUES); }
+  step(state);
+  spawnFromEvents();
+  draw();
+  meters();
+  requestAnimationFrame(frame);
+}
+
+function layoutPalette() {
+  const pal = document.getElementById("palette");
+  pal.innerHTML = "";
+  for (let h = 0; h < HUES; h++) {
+    const s = document.createElement("div");
+    s.className = "swatch"; s.style.background = hueColor(h, 60);
+    s.title = "signal " + h;
+    s.addEventListener("click", () => {
+      injectViewer(state, h);
+      lastHot = h;
+      [...pal.children].forEach((c, i) => c.classList.toggle("hot", i === h));
+    });
+    pal.appendChild(s);
+  }
+}
+
+document.getElementById("reset").addEventListener("click", () => { build(); fit(); });
+const autoBtn = document.getElementById("auto");
+autoBtn.addEventListener("click", () => { auto = !auto; autoBtn.textContent = "Auto-chatter: " + (auto ? "on" : "off"); });
+// tap the stage to inject the last-used (or a random) hue at the touch point's nearest agent hue
+stage.addEventListener("pointerdown", (e) => {
+  if (e.target.closest("#controls")) return;
+  injectViewer(state, lastHot >= 0 ? lastHot : Math.floor(Math.random() * HUES));
+});
+window.addEventListener("resize", fit);
+
+build(); fit(); requestAnimationFrame(frame);
+</script>
+</body>
+</html>
