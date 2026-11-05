@@ -37,6 +37,10 @@ npm test   # node --test, zero dependencies
 
 Pask wrote "The Architectural Relevance of Cybernetics" for *Architectural Design* in September 1969, arguing that a building could be a system in conversation with its occupants, in place of a fixed container. He had spent the earlier 1960s as cybernetician to Cedric Price and Joan Littlewood's unbuilt Fun Palace, chairing its Cybernetics Committee. Those arguments are why this piece sits beside a stigmergic construction sim and a reflex tortoise in the same set of projects: all three are small machines whose behaviour comes from the loop, not from a plan.
 
+## Precedents, kept to what is verified
+
+*Une architecture des humeurs* (R&Sie(n), Le Laboratoire, Paris, 2010) read visitors' body chemistry as moods and let those readings set a construction protocol. It is cited here as a case of physiology treated as the input side of a design loop; colloquy's loop is Pask's conversation, and it reads and models no physiology. Roche's position that communication needs misunderstanding (the 2009 *Speeches from LA* interview; *Stuttering Fall*, with Natanel Elfassy, *Log* 19, 2010) is the one point of contact with the way this piece handles a signal that lands on tired ears.
+
 ## Sources
 
 - Gordon Pask, "A comment, a case history and a plan", in Jasia Reichardt (ed.), *Cybernetics, Art and Ideas* (Studio Vista, 1971) — the source of the phrase "aesthetically potent environment".
