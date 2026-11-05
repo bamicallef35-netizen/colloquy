@@ -35,7 +35,7 @@ npm test   # node --test, zero dependencies
 
 ## Why Pask
 
-Pask wrote "The Architectural Relevance of Cybernetics" for *Architectural Design* in September 1969, arguing that a building could be a system in conversation with its occupants rather than a fixed container. He had spent the earlier 1960s as cybernetician to Cedric Price and Joan Littlewood's unbuilt Fun Palace, chairing its Cybernetics Committee. Those arguments are why this piece sits beside a stigmergic construction sim and a reflex tortoise in the same set of projects: all three are small machines whose behaviour comes from the loop, not from a plan.
+Pask wrote "The Architectural Relevance of Cybernetics" for *Architectural Design* in September 1969, arguing that a building could be a system in conversation with its occupants, in place of a fixed container. He had spent the earlier 1960s as cybernetician to Cedric Price and Joan Littlewood's unbuilt Fun Palace, chairing its Cybernetics Committee. Those arguments are why this piece sits beside a stigmergic construction sim and a reflex tortoise in the same set of projects: all three are small machines whose behaviour comes from the loop, not from a plan.
 
 ## Sources
 

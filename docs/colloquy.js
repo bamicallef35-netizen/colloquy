@@ -122,7 +122,7 @@ export function step(state) {
 
   // Responders answer. The first un-bored, hue-matching responder consumes a
   // signal; the exchange satisfies both parties a little and habituates both
-  // to that hue, so the next identical signal lands on tireder ears.
+  // to that hue, so the next identical signal meets a higher threshold.
   const kept = [];
   for (const sig of state.signals) {
     let answered = false;
