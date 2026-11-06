@@ -25,6 +25,7 @@ export function recordTick(state) {
 
 // A signal class as an SVG glyph centred at (x, y) with half-size s.
 export function glyph(h, x, y, s, fill, stroke) {
+  x = Number(x); y = Number(y); s = Number(s);   // formatted strings would concatenate in the arithmetic below
   const f = fill ? `fill="${fill}"` : `fill="none" stroke="${stroke || INK}" stroke-width="1"`;
   switch (h % 6) {
     case 0: return `<circle cx="${x}" cy="${y}" r="${s}" ${f}/>`;

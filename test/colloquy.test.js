@@ -101,4 +101,5 @@ test("the score is one SVG carrying every emission as a glyph and the scenario b
   assert.ok(svg.startsWith("<svg") && svg.trimEnd().endsWith("</svg>"));
   for (const k of ["project", "programme", "area", "procedure", "record", "viewer", "caller 0", "answerer 2", "100 ticks"]) assert.ok(svg.includes(k), k);
   assert.ok(emits > 0 && (svg.match(/<(circle|rect|path) /g) || []).length >= emits, "a mark per emission at least");
+  for (const d of svg.match(/ d="[^"]*"/g) || []) assert.ok(!/\d\.\d+\.\d/.test(d) && !/NaN/.test(d), "well-formed path data: " + d.slice(0, 40));
 });
