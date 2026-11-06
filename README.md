@@ -22,6 +22,7 @@ Two projectors and three responders sit in a ring ([`docs/colloquy.js`](docs/col
 - A responder whose hue matches (within a tolerance, around a colour wheel) and who is not yet bored of that hue **answers**. The exchange drops both parties' drives — a transient satisfaction — and raises both parties' habituation to that hue. If a drive falls low enough the agent flares a satisfaction beam.
 - Habituation is slowly forgotten, so a worn-out signal regains its power with time; a *different* hue works at once.
 - The **viewer** injects signals through the same channel as a projector. Repeat one and the responders stop answering it; vary it and they re-engage.
+- **Sound**, off by default, is a render-only layer on the live page: each exchange is a short tone whose pitch is its signal class, a satisfaction beam an octave above it. The deterministic core stays silent, so the tests are unaffected.
 
 Every random choice routes through a seeded PRNG, so a run is a pure function of its seed and parameters.
 

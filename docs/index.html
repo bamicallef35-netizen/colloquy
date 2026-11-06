@@ -21,6 +21,7 @@
     <div class="controls">
       <div class="group" id="palette"><span class="lbl">your signal</span></div>
       <div class="group">
+        <button id="sound" aria-pressed="false">sound</button>
         <button id="auto" aria-pressed="false">auto-chatter</button>
         <button id="reset" aria-pressed="false">reset</button>
       </div>
@@ -29,7 +30,7 @@
       <span class="k">conversation</span><span class="bar"><i id="convo"></i></span>
       <span class="k">their boredom</span><span class="bar"><i id="bored"></i></span>
     </div>
-    <figcaption>say something — press a glyph. repeat it and they stop answering; vary it and they re-engage. blue marks an exchange.</figcaption>
+    <figcaption>say something — press a glyph. repeat it and they stop answering; vary it and they re-engage. blue marks an exchange; with sound on, each exchange is a tone whose pitch is its signal class.</figcaption>
   </figure>
 
   <section class="text">
@@ -51,6 +52,20 @@ const RULE = css.getPropertyValue("--rule").trim(), ACCENT = css.getPropertyValu
 const GLYPHS = ["●", "■", "▲", "◆", "✚", "▬"];
 const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
 let state, pulses = [], HUES = 6, auto = false, autoClock = 0, lastHot = -1, answerWin = [];
+let sound = false, audio = null;
+
+// Sound is render-only: the deterministic core stays silent. Pask's mobiles
+// answered with sound; here each exchange is a short tone whose pitch is the
+// signal class, a beam a higher one, and the viewer's own signal a low tap.
+function tone(freq, seconds, gain) {
+  if (!sound || !audio) return;
+  const t = audio.currentTime, o = audio.createOscillator(), g = audio.createGain();
+  o.type = "sine"; o.frequency.value = freq;
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain, t + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0005, t + seconds);
+  o.connect(g).connect(audio.destination); o.start(t); o.stop(t + seconds + 0.02);
+}
+const pitch = (hue) => 220 * Math.pow(2, hue / 6);
 
 function build() { state = createState({ seed: 1 }); HUES = state.p.hues; pulses = []; layoutPalette(); }
 function layout() {
@@ -77,9 +92,9 @@ function glyph(h, x, y, s, fill) {
 function spawnFromEvents() {
   for (const e of state.events) {
     const src = e.from < 0 ? { _x: state._cx, _y: state._cy } : state.agents[e.from];
-    if (e.kind === "emit") pulses.push({ kind: "ring", x: src._x, y: src._y, hue: e.hue, age: 0, max: 46, viewer: e.from < 0 });
-    else if (e.kind === "answer") { const dst = state.agents[e.to]; pulses.push({ kind: "link", x0: src._x, y0: src._y, x1: dst._x, y1: dst._y, age: 0, max: 30 }); }
-    else if (e.kind === "beam") { const a = state.agents[e.from]; pulses.push({ kind: "beam", x: a._x, y: a._y, age: 0, max: 24 }); }
+    if (e.kind === "emit") { pulses.push({ kind: "ring", x: src._x, y: src._y, hue: e.hue, age: 0, max: 46, viewer: e.from < 0 }); if (e.from < 0) tone(110, 0.06, 0.05); }
+    else if (e.kind === "answer") { const dst = state.agents[e.to]; pulses.push({ kind: "link", x0: src._x, y0: src._y, x1: dst._x, y1: dst._y, age: 0, max: 30 }); tone(pitch(e.hue), 0.18, 0.07); }
+    else if (e.kind === "beam") { const a = state.agents[e.from]; pulses.push({ kind: "beam", x: a._x, y: a._y, age: 0, max: 24 }); tone(pitch(e.hue) * 2, 0.3, 0.05); }
   }
 }
 function draw() {
@@ -141,6 +156,13 @@ function layoutPalette() {
   }
 }
 document.getElementById("reset").addEventListener("click", () => { build(); fit(); });
+const soundBtn = document.getElementById("sound");
+soundBtn.addEventListener("click", () => {
+  sound = !sound;
+  if (sound && !audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+  if (sound && audio.state === "suspended") audio.resume();
+  soundBtn.setAttribute("aria-pressed", String(sound));
+});
 const autoBtn = document.getElementById("auto");
 autoBtn.addEventListener("click", () => { auto = !auto; autoBtn.setAttribute("aria-pressed", String(auto)); });
 stage.addEventListener("pointerdown", () => { injectViewer(state, lastHot >= 0 ? lastHot : Math.floor(Math.random() * HUES)); });
