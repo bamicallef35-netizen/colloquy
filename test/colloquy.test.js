@@ -91,3 +91,14 @@ test("roles and counts are set up as configured", () => {
   assert.equal(state.agents.filter((a) => a.role === RESPONDER).length, 3);
   assert.equal(defaultParams().hues, 6);
 });
+
+test("the score is one SVG carrying every emission as a glyph and the scenario block", async () => {
+  const { recordTick, scoreSheet } = await import("../docs/score.js");
+  const state = createState({ seed: 4 }), trace = [];
+  let emits = 0;
+  for (let t = 0; t < 300; t++) { if (t % 15 === 0) injectViewer(state, t % 6); step(state); trace.push(recordTick(state)); emits += state.events.filter((e) => e.kind === "emit").length; }
+  const svg = scoreSheet(trace, state.p, { seed: 4, roles: state.agents.map((a) => a.role) });
+  assert.ok(svg.startsWith("<svg") && svg.trimEnd().endsWith("</svg>"));
+  for (const k of ["project", "programme", "area", "procedure", "record", "viewer", "caller 0", "answerer 2", "100 ticks"]) assert.ok(svg.includes(k), k);
+  assert.ok(emits > 0 && (svg.match(/<(circle|rect|path) /g) || []).length >= emits, "a mark per emission at least");
+});

@@ -26,13 +26,19 @@ Two projectors and three responders sit in a ring ([`docs/colloquy.js`](docs/col
 
 Every random choice routes through a seeded PRNG, so a run is a pure function of its seed and parameters.
 
+## The score
+
+A conversation is a thing that happens in time, so the drawing of one is a score. `node tools/score.js [seed] [ticks]` runs a scripted viewer — silent, then repeating one class until the answerers tire of it, then a different class, then silent — and draws the whole exchange: one lane per agent and one for the viewer, each emission as its glyph, each answer as a tie between lanes, each satisfaction as a filled beam, every drive as a line and every habituation as a grey ground, with a title block in the scenario format R&Sie(n) used for every project. **Export score** on the live page draws the last twelve hundred ticks of your own conversation the same way.
+
+![A scored conversation, seed 1, 720 ticks](media/score.svg)
+
 ## Tests
 
 ```bash
 npm test   # node --test, zero dependencies
 ```
 
-[`test/colloquy.test.js`](test/colloquy.test.js) pins properties of the code — never claims about Pask's hardware: determinism (same seed, same trace; different seeds diverge); boundedness (drives and habituation stay in 0–1 under random input); satisfaction reachability (the agents do answer one another, and someone is satisfied); **habituation** (a signal repeated every tick lands at first and then its effectiveness collapses — Pask's boredom); **novelty revival** (a fresh hue is answered again after the old one has worn out); and **signal-token conservation** (every signal emitted is exactly one of answered, expired, or still in flight, at every tick).
+[`test/colloquy.test.js`](test/colloquy.test.js) pins properties of the code — never claims about Pask's hardware: the score (one SVG, a mark per emission, the scenario block); determinism (same seed, same trace; different seeds diverge); boundedness (drives and habituation stay in 0–1 under random input); satisfaction reachability (the agents do answer one another, and someone is satisfied); **habituation** (a signal repeated every tick lands at first and then its effectiveness collapses — Pask's boredom); **novelty revival** (a fresh hue is answered again after the old one has worn out); and **signal-token conservation** (every signal emitted is exactly one of answered, expired, or still in flight, at every tick).
 
 ## Why Pask
 
