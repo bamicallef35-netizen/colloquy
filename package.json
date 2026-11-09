@@ -1,0 +1,15 @@
+{
+  "name": "colloquy",
+  "version": "0.1.0",
+  "description": "A Colloquy of Signals — an aesthetically potent environment after Gordon Pask: signalling agents with drives, transient satisfaction, and habituation.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test"
+  },
+  "author": "Ben Micallef",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bamicallef35-netizen/colloquy"
+  }
+}
